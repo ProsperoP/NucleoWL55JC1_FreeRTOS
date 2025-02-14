@@ -114,10 +114,16 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+	uint32_t notificationValue;
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  //Wait for any notification. This is the communication task, so it will be notified when data is received.
+	  xTaskNotificationWait(0x00, 	// ulBitsToClearOnEntry
+			  0xFFFFFFFF,			// ulBitsToClearOnExit
+			  &notificationValue,	// *pulNotificationValue
+			  portMAX_DELAY);		// xTicksToWait
+	  osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
 }
