@@ -36,7 +36,7 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern UART_HandleTypeDef huart2;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -81,7 +81,7 @@ void Error_Handler(void);
 #define T_VCP_RXA2_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-
+#define NOTIFY_BIT_TO_MASK(n) (1 << n)
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
