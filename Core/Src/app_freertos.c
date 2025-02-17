@@ -25,8 +25,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "queue.h"
 #include "communicationTask.h" //To use notif bit private define
-#include "HighPrioTask.h" //To be initialized ans started in here
+#include "HighPrioTask.h" //To be initialized and started in here
+#include "app_queues.h"
 #include <stdarg.h>
 #include <stdio.h>
 //#include "LowPrioTask.h"
@@ -91,7 +93,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
+	highPrioTaskReturnQueue = osMessageQueueNew(1, sizeof(uint32_t), &highPrioTaskReturnQueue_attributes);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -100,7 +102,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-
+	highPrio_TaskHandle = osThreadNew(HighPrioTask_Begin, NULL, &highPrio_Task_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -121,7 +123,8 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN StartDefaultTask */
 	uint32_t notificationBits = 0;
 	char receivedChar = '\0';
-	uint32_t sentNb = 0;
+	uint32_t sentNb = 0; //Sent to user directly after receiving
+	uint32_t sentChar; //Char transmitted via HighPrioTask and send to user
 
 	//Start listening for one byte RX on serial port
 	HAL_UART_Receive_IT(&huart2, (uint8_t*)&receivedChar, 1);
@@ -142,8 +145,15 @@ void StartDefaultTask(void *argument)
 		  sentNb++;
 		  HAL_UART_Abort_IT(&huart2); //Due to a bug in Cube, we have to abort IT to be able to receive properly after 1st receive (EIE flag not set, I think - tbd)
 		  HAL_UART_Receive_IT(&huart2, (uint8_t*)&receivedChar, 1);
+		  xTaskNotify(highPrio_TaskHandle, HIGHPRIOTASK_MASK_REQUEST, eSetBits);
+//		  taskYIELD(); //Probably not mandatory, as we'llenter NotifyWait immediately afterwards
 	  }
-	  osDelay(1);
+	  if (notificationBits & COMMUNICATIONTASK_MASK_DATAFROMHIGH_AVAILABLE)
+	  {
+		  //We received data from HighPrioTask, we now have to send it to user via USART
+		  xQueueReceive(highPrioTaskReturnQueue, &sentChar, 0);
+		  SendOutputMessage("Received char from HighPrioTask: %c\r\n", sentChar);
+	  }
   }
   /* USER CODE END StartDefaultTask */
 }

@@ -18,6 +18,9 @@ extern const osThreadAttr_t highPrio_Task_attributes;
 
 //Queues used by this task
 
+//Task function
+void HighPrioTask_Begin(void* argument);
+
 
 
 

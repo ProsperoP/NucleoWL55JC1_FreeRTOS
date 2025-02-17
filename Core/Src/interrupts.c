@@ -6,7 +6,7 @@
  */
 
 #include "main.h"
-#include "communicationTask.h"
+#include "app_queues.h"
 
 extern osThreadId_t defaultTaskHandle; //Defined as extern to be used
 
